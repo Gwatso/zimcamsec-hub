@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* Dark mode is class-based so the server can render the user's saved choice. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* System font stack: zero font downloads — every KB matters on mobile data. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  /* Heritage green — brand #4F7942 is heritage-600. */
+  --color-heritage-50: #f3f7f1;
+  --color-heritage-100: #e3ecdf;
+  --color-heritage-200: #c7d9c0;
+  --color-heritage-300: #a3bf98;
+  --color-heritage-400: #7ba06d;
+  --color-heritage-500: #5e8a50;
+  --color-heritage-600: #4f7942;
+  --color-heritage-700: #3f6135;
+  --color-heritage-800: #344e2d;
+  --color-heritage-900: #2c4127;
+  --color-heritage-950: #152313;
+
+  /* Zimbabwe gold — brand #D4AF37 is gold-500. Use for accents/fills, not body text on white. */
+  --color-gold-50: #fbf8eb;
+  --color-gold-100: #f6eecb;
+  --color-gold-200: #eedc99;
+  --color-gold-300: #e5c661;
+  --color-gold-400: #dcb43f;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #b88a24;
+  --color-gold-700: #93661f;
+  --color-gold-800: #7a5220;
+  --color-gold-900: #684520;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-500;
+  }
+
+  /* Data-Saver: belt-and-braces — the server already omits thumbnails. */
+  html[data-saver="on"] [data-heavy] {
+    display: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Reusable component utilities (usable in markup and via @apply). */
+@utility container-page {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary {
+  @apply btn bg-heritage-600 text-white hover:bg-heritage-700 dark:bg-heritage-500 dark:hover:bg-heritage-400 dark:text-heritage-950;
+}
+@utility btn-gold {
+  @apply btn bg-gold-500 text-heritage-950 hover:bg-gold-400;
+}
+@utility btn-secondary {
+  @apply btn border border-stone-300 bg-white text-stone-800 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800;
+}
+@utility btn-ghost {
+  @apply btn text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800;
+}
+@utility btn-danger {
+  @apply btn bg-red-700 text-white hover:bg-red-800;
+}
+
+@utility card {
+  @apply rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900;
+}
+
+@utility field-label {
+  @apply mb-1 block text-sm font-medium text-stone-800 dark:text-stone-200;
+}
+@utility field-input {
+  @apply block min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:border-heritage-600 focus:ring-2 focus:ring-heritage-600/30 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 aria-[invalid=true]:border-red-600;
+}
+@utility field-error {
+  @apply mt-1 text-sm text-red-700 dark:text-red-400;
+}
+@utility field-hint {
+  @apply mt-1 text-sm text-stone-500 dark:text-stone-400;
+}
+
+@utility badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+@utility prose-simple {
+  & p {
+    @apply mb-4 leading-relaxed;
+  }
+}
+
+@keyframes count-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-count-bump {
+  animation: count-bump 450ms ease-out;
+}
