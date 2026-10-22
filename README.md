@@ -26,6 +26,15 @@ npm run dev          # http://localhost:3000
 
 Development admin: `admin@zimcamsec.local` / `zimcamsec-admin-2026` (created only outside production).
 
+## Live preview on GitHub (Codespaces)
+
+On the repository page: **Code → Codespaces → Create codespace on this branch**. The codespace
+installs everything, starts the portal with demo content and opens the live URL
+(`https://<codespace-name>-3000.app.github.dev`) — no hosting needed. Sign in to the admin area
+with the development admin below. The link is private to your GitHub account by default; to
+share it, set port 3000 to **Public** in the **Ports** tab (anyone with the link can then reach
+it, so change the admin password first). Logs: `tail -f /tmp/zimcamsec.log`.
+
 ## Scripts
 
 | Command | Purpose |

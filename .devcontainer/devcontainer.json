@@ -1,0 +1,16 @@
+{
+  // GitHub Codespaces: Code → Codespaces → Create codespace. Dependencies install,
+  // the portal starts on port 3000 with demo content, and the preview URL
+  // (https://<codespace>-3000.app.github.dev) opens in the browser.
+  "name": "Zimcamsec Hub",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Zimcamsec Hub", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "codespaces": { "openFiles": ["README.md"] }
+  }
+}

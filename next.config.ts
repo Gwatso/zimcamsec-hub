@@ -41,7 +41,12 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite", "pg", "pdf-lib"],
   experimental: {
     // Admin PDF uploads go through a Server Action (max file size is enforced in the action).
-    serverActions: { bodySizeLimit: "30mb" },
+    serverActions: {
+      bodySizeLimit: "30mb",
+      // GitHub Codespaces' port forwarding proxies requests with Host: localhost, so Next
+      // would reject form posts from the *.app.github.dev preview URL as cross-site.
+      ...(process.env.CODESPACES === "true" ? { allowedOrigins: ["*.app.github.dev"] } : {}),
+    },
   },
   webpack(config) {
     // pdf.js optionally requires `canvas` for Node rendering; we only render in the browser.

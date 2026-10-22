@@ -85,7 +85,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       if (!claim.allowed) {
         // The download link is a plain navigation: send people back to the page, which explains the limit.
         if (request.headers.get("accept")?.includes("text/html")) {
-          return Response.redirect(new URL(`/resources/${resource.slug}`, request.nextUrl), 303);
+          // Relative, so it stays correct behind proxies that rewrite the Host header.
+          return new Response(null, { status: 303, headers: { Location: `/resources/${resource.slug}` } });
         }
         return jsonError(403, "guest_limit_reached", "You've used today's free download. Sign in or create a free account for unlimited downloads.");
       }
