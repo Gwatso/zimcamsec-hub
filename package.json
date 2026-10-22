@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "db:migrate": "tsx src/server/db/cli.ts migrate",
     "db:seed": "tsx src/server/db/cli.ts seed",
+    "scans": "tsx scripts/process-scans.ts",
     "postinstall": "node scripts/copy-pdf-worker.mjs"
   },
   "dependencies": {

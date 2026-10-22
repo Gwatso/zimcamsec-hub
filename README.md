@@ -36,6 +36,30 @@ Development admin: `admin@zimcamsec.local` / `zimcamsec-admin-2026` (created onl
 | `npm run typecheck` | TypeScript strict check |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL` (also runs automatically on boot) |
 | `npm run db:seed` | Create the admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD` (+ demo data if `SEED_DEMO_CONTENT=true`) |
+| `npm run scans -- <in> <out>` | Clean, compress, OCR and stamp scanned papers before uploading (below) |
+
+## Preparing scanned papers
+
+Papers collected from WhatsApp are usually phone photos or heavy scans. `npm run scans` turns a
+folder of them into small, searchable PDFs ready to upload:
+
+```bash
+npm run scans -- ~/whatsapp-papers ~/ready-to-upload --site zimcamsec.co.zw
+```
+
+- **Input:** each loose PDF/JPG/PNG is one paper; each sub-folder is one paper whose files are
+  merged in name order (e.g. the WhatsApp photos `IMG-…-WA0001.jpg`, `WA0002.jpg`, …).
+- **Per paper:** photos are turned upright (EXIF), converted to greyscale and downsampled
+  (`--dpi 200`, `--color` to keep colour maps), straightened and OCR'd so the text is searchable,
+  then a footer strip with your site address is added *below* each page (nothing on the paper is
+  covered). A 7 MB set of photos typically becomes ~0.5 MB.
+- **Output:** `<suggested-title>.pdf`, `<…>.txt` (the text) and `manifest.json` with suggested
+  level, subject, paper number, session, year and title read from the cover, plus warnings —
+  blurred scans, files over the 25 MB upload limit, and likely duplicates (the same paper
+  scanned by someone else). Always check the suggestions before publishing.
+- **Needs** [OCRmyPDF](https://ocrmypdf.readthedocs.io) and Ghostscript. Linux, or Windows via
+  WSL (Ubuntu): `sudo apt install ocrmypdf tesseract-ocr ghostscript unpaper`. Add Shona/Ndebele
+  OCR with `--lang eng+sna` after installing the matching Tesseract language pack, if available.
 
 ## Production
 
