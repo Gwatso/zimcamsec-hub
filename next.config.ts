@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: "standalone",
+  typescript: { tsconfigPath: "tsconfig.build.json" },
   // Native/WASM database drivers and pdf-lib must not be bundled by webpack.
   serverExternalPackages: ["@electric-sql/pglite", "pg", "pdf-lib"],
   experimental: {

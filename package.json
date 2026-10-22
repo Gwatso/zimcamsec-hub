@@ -21,6 +21,11 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "drizzle-orm": "^0.45.3",
     "lucide-react": "^1.48.0",
     "next": "^15.5.26",
@@ -30,17 +35,12 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "server-only": "^0.0.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^22.20.4",
-    "@types/pg": "^8.23.1",
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
-    "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3",
     "vitest": "^3.2.7"
   }
 }

@@ -1,0 +1,7 @@
+{
+  // Type-checked by `next build`. Tests and the Vitest config need dev-only
+  // packages, which hosts skip when installing with NODE_ENV=production.
+  // `npm run typecheck` still checks everything via tsconfig.json.
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", ".next", "storage", ".data", "tests", "vitest.config.ts"]
+}
