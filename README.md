@@ -7,6 +7,7 @@ ECD A to Form 6. Built for mobile data, rural connections and shared devices.
 - 📊 Live download counters (spam-resistant, updated in real time)
 - 🔒 Learner accounts (17 and under) and verified-teacher accounts (EC Number + school)
 - 📄 In-app PDF viewer — guests preview 2 pages (enforced on the server)
+- ⬇️ No sign-up needed to download: guests get 1 free PDF a day, accounts are unlimited
 - ⚡ Data-Saver mode (also honours the browser's `Save-Data` hint) and offline saving
 - 🎧 Help & Support desk routed to **edu.novacacia@gmail.com**
 - 🛠️ Master Admin: metrics, content upload, teacher verification, support queue, system error logs

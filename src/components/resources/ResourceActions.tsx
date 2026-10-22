@@ -14,11 +14,16 @@ import {
 } from "@/lib/client/offline-docs";
 import { formatBytes } from "@/lib/format";
 
-export function DownloadButton({ id, slug, sizeBytes }: { id: string; slug: string; sizeBytes: number }) {
+/**
+ * A plain link without the `download` attribute: the route's Content-Disposition
+ * names the file, and if the request is refused (e.g. the guest allowance is used
+ * up) the browser follows the redirect back to the page instead of saving an
+ * error page as a ".pdf".
+ */
+export function DownloadButton({ id, sizeBytes }: { id: string; sizeBytes: number }) {
   return (
     <a
       href={`/api/resources/${id}/file?mode=download`}
-      download={`${slug}.pdf`}
       className="btn-primary"
       onClick={() => refreshSoon(id, 2000)}
     >

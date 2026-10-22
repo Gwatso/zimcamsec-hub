@@ -1,5 +1,6 @@
 import { BadgeCheck, CalendarDays, FileText, Info, Lock } from "lucide-react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -8,12 +9,14 @@ import { DownloadButton, SaveOfflineButton } from "@/components/resources/Resour
 import { ResourceCard } from "@/components/resources/ResourceCard";
 import { EducatorBadge, TierBadge, TypeBadge, resourceSubtitle } from "@/components/resources/ResourceMeta";
 import { PdfViewer } from "@/components/viewer/PdfViewer";
-import { resolveAccess } from "@/lib/access";
+import { GUEST_DAILY_DOWNLOADS, guestDownloadDecision, resolveAccess } from "@/lib/access";
+import { GUEST_COOKIE } from "@/lib/cookies";
 import { getSubject, getTier, levelLabel } from "@/lib/curriculum";
 import { formatDate } from "@/lib/dates";
 import { formatBytes } from "@/lib/format";
 import { getCurrentUser } from "@/server/auth/session";
 import { getPreferences } from "@/server/preferences";
+import { getGuestDownloadsToday, parseGuestId } from "@/server/services/guest-downloads";
 import { getRelatedResources, getResourceBySlug } from "@/server/services/resources";
 
 type Params = Promise<{ slug: string }>;
@@ -38,6 +41,8 @@ export default async function ResourcePage({ params }: { params: Params }) {
 
   const access = resolveAccess(user ? { role: user.role, teacherStatus: user.teacherStatus } : null, resource.audience);
   const related = await getRelatedResources(resource);
+  // The file route enforces the allowance; this only decides what to show.
+  const guestCanDownload = access.downloadLimited ? await guestHasAllowance(resource.id) : false;
   const tier = getTier(resource.tier);
   const here = `/resources/${resource.slug}`;
   const signInHref = `/auth/sign-in?next=${encodeURIComponent(here)}`;
@@ -105,9 +110,28 @@ export default async function ResourcePage({ params }: { params: Params }) {
 
         <aside className="space-y-4">
           <div className="card space-y-3 p-5">
-            {access.canDownload ? (
+            {access.canDownload && access.downloadLimited ? (
+              guestCanDownload ? (
+                <>
+                  <DownloadButton id={resource.id} sizeBytes={resource.fileSizeBytes} />
+                  <p className="text-xs text-stone-600 dark:text-stone-400">
+                    Free without an account: {GUEST_DAILY_DOWNLOADS === 1 ? "1 PDF" : `${GUEST_DAILY_DOWNLOADS} PDFs`} a day.{" "}
+                    <Link href={registerHref} className="underline">Create a free account</Link> for unlimited downloads and offline saving.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-stone-700 dark:text-stone-300">
+                    <Lock aria-hidden className="mr-1 inline size-4" />
+                    You&apos;ve used today&apos;s free download. Create a free account for unlimited downloads, or come back tomorrow.
+                  </p>
+                  <Link href={registerHref} className="btn-primary w-full">Create free account</Link>
+                  <Link href={signInHref} className="btn-secondary w-full">Sign in</Link>
+                </>
+              )
+            ) : access.canDownload ? (
               <>
-                <DownloadButton id={resource.id} slug={resource.slug} sizeBytes={resource.fileSizeBytes} />
+                <DownloadButton id={resource.id} sizeBytes={resource.fileSizeBytes} />
                 <SaveOfflineButton
                   doc={{
                     id: resource.id,
@@ -172,6 +196,12 @@ export default async function ResourcePage({ params }: { params: Params }) {
       )}
     </div>
   );
+}
+
+async function guestHasAllowance(resourceId: string): Promise<boolean> {
+  const guestId = parseGuestId((await cookies()).get(GUEST_COOKIE)?.value);
+  if (!guestId) return true;
+  return guestDownloadDecision(await getGuestDownloadsToday(guestId), resourceId).allowed;
 }
 
 function LockedPanel({

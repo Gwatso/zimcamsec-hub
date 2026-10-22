@@ -10,7 +10,8 @@
 | --- | --- | --- |
 | Live download counters ("social proof") | A **shared, server-side** count all visitors see; resistant to inflation | Postgres counter + per-user-per-day de-duplication table; batched polling API |
 | Learner gate (17 and under) | Real accounts, age rule enforced server-side, safeguarding | DB-backed sessions, DOB validation in Harare time, guardian e-mail under 13 |
-| Preview guardrail (2 pages for guests) | Rest of the document must **never reach** the guest | Server generates a separate 2-page PDF at upload time; full file requires a session |
+| Preview guardrail (2 pages for guests) | Rest of the document must **never reach** the guest in the viewer | Server generates a separate 2-page PDF at upload time; full in-app view requires a session |
+| Guest downloads (1 file a day without an account) | Allowance tracked server-side, fair on shared networks | `guest_downloads` table keyed by a random `zch_guest` cookie + Harare day; see §5.2a |
 | Teacher-only content (EC No. & school) | Verification workflow, not just a checkbox | `teacher_status` pending → verified by admin; access policy is a pure, tested function |
 | Data-Saver & offline | Minimal bytes on 2G/3G; content usable with no signal | SSR honours Data-Saver/`Save-Data`; pdf.js range loading; service worker; explicit "Save for offline" |
 | Support desk → edu.novacacia@gmail.com | Messages must never be lost, even if e-mail fails | Persist ticket first, then e-mail via Resend; admin queue with retry |
@@ -91,6 +92,7 @@ users ──< sessions                         (token SHA-256 is the PK)
   │
   ├──< resource_events >── resources       (every view/download; history + metrics)
   └──< resource_daily_uniques >── resources (PK resource,user,day → counter de-dupe)
+guest_downloads >── resources            (PK guest cookie id, day, resource → guest allowance)
 support_tickets (reference ZCH-XXXXXX, delivery_status)
 error_logs (source server|client, fingerprint)
 schema_migrations
@@ -131,6 +133,22 @@ sequenceDiagram
 4. The client calls `refreshSoon()` → `/api/resources/counts?ids=…&fresh=1` and the badge animates.
 5. Other visitors' badges update via **one** batched poll per tab (45 s; paused when hidden,
    offline or in Data-Saver). Counts are CDN-cacheable for 10–20 s.
+
+### 5.2a Guest download (no account)
+
+1. `GET /api/resources/:id/file?mode=download` without a session, for a public resource.
+2. The route reads the `zch_guest` cookie (random 128-bit id) or mints one, checks the file
+   exists, then calls `claimGuestDownload()`: under a per-guest advisory lock it applies
+   `guestDownloadDecision()` (`GUEST_DAILY_DOWNLOADS` = 1 new file per Harare day; the same
+   file again is free, so retries and Range resumes work). A new file inserts a
+   `guest_downloads` row, logs an anonymous `resource_events` row and bumps `download_count`.
+3. Refused: browser navigations get a 303 back to the resource page (which explains the limit);
+   other clients get `403 guest_limit_reached`. The download link has no `download` attribute
+   so a refusal is never saved as a ".pdf".
+4. **Trade-off:** guests are identified by cookie, not IP — Zimbabwean mobile networks (CGNAT)
+   and school Wi-Fi put many people behind one IP. Clearing cookies resets the allowance; it is
+   a nudge to sign up, not DRM. Scraping stays bounded by the per-IP file rate limiter.
+   Rows older than 7 days are purged opportunistically.
 
 ### 5.3 Registration
 

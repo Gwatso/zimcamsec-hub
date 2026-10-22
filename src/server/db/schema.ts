@@ -104,6 +104,20 @@ export const resourceDailyUniques = pgTable(
   (t) => [primaryKey({ columns: [t.resourceId, t.userId, t.day] })],
 );
 
+/** One row per (guest, Harare day, resource) — enforces the anonymous daily download allowance. */
+export const guestDownloads = pgTable(
+  "guest_downloads",
+  {
+    guestId: text("guest_id").notNull(),
+    day: date("day").notNull(),
+    resourceId: uuid("resource_id")
+      .notNull()
+      .references(() => resources.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.guestId, t.day, t.resourceId] })],
+);
+
 export const supportTickets = pgTable("support_tickets", {
   id: uuid("id").primaryKey().defaultRandom(),
   reference: text("reference").notNull().unique(),

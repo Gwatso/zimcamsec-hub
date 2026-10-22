@@ -144,4 +144,17 @@ CREATE INDEX error_logs_created_idx     ON error_logs (created_at DESC);
 CREATE INDEX error_logs_fingerprint_idx ON error_logs (fingerprint, created_at DESC);
 `,
   },
+  {
+    name: "0002_guest_downloads",
+    sql: /* sql */ `
+CREATE TABLE guest_downloads (
+  guest_id     text NOT NULL CHECK (char_length(guest_id) <= 64),
+  day          date NOT NULL,
+  resource_id  uuid NOT NULL REFERENCES resources (id) ON DELETE CASCADE,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (guest_id, day, resource_id)
+);
+CREATE INDEX guest_downloads_day_idx ON guest_downloads (day);
+`,
+  },
 ];

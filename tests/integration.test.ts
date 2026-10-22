@@ -18,6 +18,7 @@ process.env.RESEND_API_KEY = "";
 const { getDb } = await import("@/server/db/client");
 const { resources, users } = await import("@/server/db/schema");
 const { recordResourceAccess, getUserHistory } = await import("@/server/services/downloads");
+const { claimGuestDownload, getGuestDownloadsToday, newGuestId, parseGuestId } = await import("@/server/services/guest-downloads");
 const { listResources, getDownloadCounts } = await import("@/server/services/resources");
 const { registerUser, authenticate, DuplicateAccountError } = await import("@/server/services/users");
 const { createTicket } = await import("@/server/services/support");
@@ -30,6 +31,7 @@ async function makePdf(pages: number): Promise<Uint8Array> {
 }
 
 let resourceId: string;
+let otherResourceIds: string[];
 
 beforeAll(async () => {
   const db = await getDb();
@@ -63,6 +65,23 @@ beforeAll(async () => {
     ])
     .returning({ id: resources.id });
   resourceId = row!.id;
+
+  const others = await db
+    .insert(resources)
+    .values(
+      ["c", "d", "e"].map((c) => ({
+        slug: `guest-test-${c}`,
+        title: `Guest test ${c}`,
+        tier: "lower-secondary",
+        resourceType: "study-notes",
+        fileKey: `resources/${c}.pdf`,
+        fileSizeBytes: 1000,
+        pageCount: 2,
+        checksumSha256: c.repeat(64),
+      })),
+    )
+    .returning({ id: resources.id });
+  otherResourceIds = others.map((r) => r.id);
 }, 60_000);
 
 const learner = {
@@ -130,6 +149,39 @@ describe("download counter", () => {
     const history = await getUserHistory(user!.id);
     expect(history).toHaveLength(1);
     expect(history[0]?.id).toBe(resourceId);
+  });
+});
+
+describe("guest download allowance", () => {
+  it("allows one new file per guest per day, re-downloads free, and counts each guest once", async () => {
+    const [a, b] = otherResourceIds as [string, string];
+    const guest = newGuestId();
+    expect(parseGuestId(guest)).toBe(guest);
+    const before = (await getDownloadCounts([a]))[a]!;
+
+    expect(await claimGuestDownload({ guestId: guest, resourceId: a, day: "2026-03-01" })).toMatchObject({ allowed: true, isNew: true });
+    expect(await claimGuestDownload({ guestId: guest, resourceId: a, day: "2026-03-01" })).toMatchObject({ allowed: true, isNew: false });
+    expect(await claimGuestDownload({ guestId: guest, resourceId: b, day: "2026-03-01" })).toMatchObject({ allowed: false });
+    expect((await getDownloadCounts([a]))[a]).toBe(before + 1);
+    expect(await getGuestDownloadsToday(guest, "2026-03-01")).toEqual([a]);
+
+    // A new day, or a different guest, gets a fresh allowance.
+    expect((await claimGuestDownload({ guestId: guest, resourceId: b, day: "2026-03-02" })).allowed).toBe(true);
+    expect((await claimGuestDownload({ guestId: newGuestId(), resourceId: b, day: "2026-03-01" })).allowed).toBe(true);
+  });
+
+  it("lets only one of two parallel downloads of different files through", async () => {
+    const guest = newGuestId();
+    const results = await Promise.all(
+      otherResourceIds.map((resourceId) => claimGuestDownload({ guestId: guest, resourceId, day: "2026-03-05" })),
+    );
+    expect(results.filter((r) => r.allowed)).toHaveLength(1);
+  });
+
+  it("rejects malformed guest ids", () => {
+    expect(parseGuestId(undefined)).toBeNull();
+    expect(parseGuestId("short")).toBeNull();
+    expect(parseGuestId("x".repeat(22) + ";")).toBeNull();
   });
 });
 
